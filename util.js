@@ -86,8 +86,10 @@ const traverse = async (fn, {
               /* if (depth > 0) {
                 await _wait(100);
               } */
-              const res = await fetch(u);
-              if (res.ok || res.status === 404) {
+              const res = await fetch(u, {
+                redirect: 'manual',
+              });
+              if (res.ok || res.status === 404 || res.status === 301) {
                 const text = await res.text();
 
                 pageCache.set(u, text);
