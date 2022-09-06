@@ -110,7 +110,7 @@ const traverse = async (fn, {
       const urls = depth === 0 ? getMainUrls($) : getPageUrls($);
       const shouldContinue = depth < maxDepth;
 
-      fn && fn(u, $);
+      fn && fn(u, depth, $);
 
       // console.log('got urls', urls, text);
 
@@ -126,9 +126,10 @@ const traverse = async (fn, {
 const parseMain = $ => {
   $('#toc').remove();
   $('table').remove();
+  $('iframe').remove();
 
   const title = $('h1').first().text().trim();
-  const contents = $('#content').text().trim().replace(/(\s)+/g, '$1');
+  const contents = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
   
   return {
     title,
@@ -138,9 +139,10 @@ const parseMain = $ => {
 const parsePage = $ => {
   $('#toc').remove();
   $('table').remove();
+  $('iframe').remove();
 
   const title = $('h1').first().text().trim();
-  const contents = $('#content').text().trim().replace(/(\s)+/g, '$1');
+  const contents = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
   
   return {
     title,
@@ -168,7 +170,7 @@ const getAnchors = ($, selector) => {
     .map(u2 => u2 + '');
   return urls;
 };
-const getMainUrls = $ => getAnchors($, '#content div > ul > li > a');
+const getMainUrls = $ => getAnchors($, `#content table > tbody > tr > td > ul > li > a`);
 const getPageUrls = $ => getAnchors($, 'div[data-source="related_aesthetics"] > .pi-data-value > a');
 const getPageName = u => u.match(nameRegex)?.[1] ?? '';
 module.exports = {
