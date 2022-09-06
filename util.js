@@ -106,7 +106,7 @@ const traverse = async (fn, {
         }
       })();
 
-      const $ = cheerio.load(text);
+      const $ = cheerio.load(text.replace(/<br\s*\/?>/g, '\n'));
       const urls = depth === 0 ? getMainUrls($) : getPageUrls($);
       const shouldContinue = depth < maxDepth;
 
@@ -142,10 +142,23 @@ const parsePage = $ => {
   $('iframe').remove();
 
   const title = $('h1').first().text().trim();
+  const captions = Array.from($('.pi-caption')).map(el => $(el).text().trim());
+  const properties = Array.from($('aside .pi-item')).map(el => {
+    const $el = $(el);
+    const key = $el.find('.pi-data-label').text().trim();
+    const value = $el.find('.pi-data-value').text().trim();
+    return key && value && {
+      key,
+      value,
+    };
+  }).filter(o => !!o);
+  $('aside').remove();
   const contents = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
   
   return {
     title,
+    captions,
+    properties,
     contents,
   };
 };
