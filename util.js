@@ -6,12 +6,11 @@ const cheerio = require('cheerio');
 // const fetch = require('cross-fetch');
 const mkdirp = require('mkdirp');
 
-const u = `https://tvtropes.org/pmwiki/pmwiki.php/Main/Settings`;
-const maxDepth = 4;
+const u = `https://aesthetics.fandom.com/wiki/List_of_Aesthetics`;
+const maxDepth = 20;
 const dataDirectory = `data`;
-const extraDataDirectories = [`data2`, `data3`, `data4`, `data5`, `data6`, `data7`];
-const mainRegex = /^\/pmwiki\/pmwiki\.php\/(?:Main|UsefulNotes|Literature|LightNovel|ComicBook|Manga|Fanfic|WesternAnimation|Anime|Series|Film|VideoGame|Characters)/;
-const nameRegex = /\/pmwiki\/pmwiki\.php\/(.*)$/;
+const mainRegex = /^\/wiki\//;
+const nameRegex = /\/wiki\/(.*)$/;
 
 const _getKey = s => murmur.murmur3(s);
 const _getPath = (dataDirectory, key) => path.join(dataDirectory, `${key}.html`);
@@ -44,7 +43,7 @@ const pageCache = {
       }
     };
     let result = _tryGetKey(key, dataDirectory);
-    if (!result) {
+    /* if (!result) {
       for (const extraDataDirectory of extraDataDirectories) {
         result = _tryGetKey(key, extraDataDirectory);
         if (result) {
@@ -52,7 +51,7 @@ const pageCache = {
           break;
         }
       }
-    }
+    } */
     return result;
   },
   set(u, d) {
@@ -84,19 +83,12 @@ const traverse = async (fn, {
           if (download) {
             console.log(`${u} ${_getPath(dataDirectory, _getKey(u))} (${depth})`);
             const _fetchText = async () => {
-              // if (depth > 0) {
-              //   await _wait(100);
-              // }
+              /* if (depth > 0) {
+                await _wait(100);
+              } */
               const res = await fetch(u);
               if (res.ok || res.status === 404) {
                 const text = await res.text();
-
-                /* const $ = cheerio.load(text);
-                const {title} = parse($);
-                if (title === '403') {
-                  console.warn(res);
-                  throw new Error('got ok 403');
-                } */
 
                 pageCache.set(u, text);
                 return text;
@@ -115,10 +107,12 @@ const traverse = async (fn, {
       })();
 
       const $ = cheerio.load(text);
-      const urls = getUrls($);
+      const urls = depth === 0 ? getMainUrls($) : getPageUrls($);
       const shouldContinue = depth < maxDepth;
 
       fn && fn(u, $);
+
+      // console.log('got urls', urls, text);
 
       if (shouldContinue) {
         for (const u2 of urls) {
@@ -129,12 +123,24 @@ const traverse = async (fn, {
   };
   await _recurse(u);
 };
-const parse = $ => {
-  $(`#main-article hr ~ *`).remove();
-  $('.square_ad').remove();
+const parseMain = $ => {
+  $('#toc').remove();
+  $('table').remove();
 
   const title = $('h1').first().text().trim();
-  const contents = $('#main-article').text().trim().replace(/(\s)+/g, '$1');
+  const contents = $('#content').text().trim().replace(/(\s)+/g, '$1');
+  
+  return {
+    title,
+    contents,
+  };
+};
+const parsePage = $ => {
+  $('#toc').remove();
+  $('table').remove();
+
+  const title = $('h1').first().text().trim();
+  const contents = $('#content').text().trim().replace(/(\s)+/g, '$1');
   
   return {
     title,
@@ -156,20 +162,21 @@ const getAnchors = ($, selector) => {
       }
     })
     .filter(u2 =>
-      u2.origin === `https://tvtropes.org` &&
+      u2.origin === `https://aesthetics.fandom.com` &&
       mainRegex.test(u2.pathname)
     )
     .map(u2 => u2 + '');
   return urls;
 };
-const getUrls = $ => getAnchors($, '#main-article h2 ~ div > ul > li > a, #main-article h2 ~ ul > li > a');
+const getMainUrls = $ => getAnchors($, '#content div > ul > li > a');
+const getPageUrls = $ => getAnchors($, 'div[data-source="related_aesthetics"] > .pi-data-value > a');
 const getPageName = u => u.match(nameRegex)?.[1] ?? '';
-const isTropePageName = u => /^(?:Main|UsefulNotes)/.test(u);
 module.exports = {
   getUrlPath,
   traverse,
-  parse,
-  getUrls,
+  parseMain,
+  parsePage,
+  getMainUrls,
+  getPageUrls,
   getPageName,
-  isTropePageName,
 };
