@@ -57,12 +57,13 @@ const childrenCache = {
     if (depth > 0) {
       console.log(url);
 
-      const page = parsePage($);
+      const childUrls = getPageUrls($);
       const name = getPageName(url);
+
+      const page = parsePage($);
 
       aestheticsCache.add(name, page);
 
-      const childUrls = getPageUrls($);
       for (const childUrl of childUrls) {
         const childName = getPageName(childUrl);
         childrenCache.add(name, childName);
