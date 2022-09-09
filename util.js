@@ -83,23 +83,32 @@ const traverse = async (fn, {
           if (download) {
             console.log(`${u} ${_getPath(dataDirectory, _getKey(u))} (${depth})`);
             const _fetchText = async () => {
-              /* if (depth > 0) {
-                await _wait(100);
-              } */
-              const res = await fetch(u, {
-                redirect: 'manual',
-              });
-              if (res.ok || res.status === 404 || res.status === 301) {
-                const text = await res.text();
+              try {
+                /* if (depth > 0) {
+                  await _wait(100);
+                } */
+                const res = await fetch(u);
+                if (res.ok || res.status === 404 || res.status >= 300 && res.status < 400) {
+                  const text = await res.text();
 
-                pageCache.set(u, text);
-                return text;
-              } else {
-                console.log('delaying request due to error:', res.status, res.statusText);
-                await _wait(60 * 1000);
-                console.log('trying again');
-                return await _fetchText();
-              };
+                  pageCache.set(u, text);
+                  return text;
+                } else {
+                  console.log('delaying request due to error:', res.status, res.statusText);
+                  await _wait(60 * 1000);
+                  console.log('trying again');
+                  return await _fetchText();
+                }
+              } catch(err) {
+                if (/redirect/i.test(err.message)) {
+                  // console.log('got redirect error, trying again');
+                  // return await _fetchText();
+                  console.log('ignoring redirect error', err);
+                  return '';
+                } else {
+                  throw err;
+                }
+              }
             };
             return await _fetchText();
           } else {
