@@ -1,5 +1,5 @@
 {
-  "name": "tvtropes-scraper",
+  "name": "aesthetics-wiki-scraper",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,6 +13,7 @@
     "cross-fetch": "^3.1.5",
     "mkdirp": "^1.0.4",
     "murmurhash-js": "^1.0.0",
+    "uuid-by-string": "^4.0.0",
     "weaviate-client": "^2.11.1"
   }
 }
