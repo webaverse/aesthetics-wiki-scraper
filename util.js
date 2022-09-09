@@ -12,6 +12,8 @@ const dataDirectory = `data`;
 const mainRegex = /^\/wiki\//;
 const nameRegex = /\/wiki\/(.*)$/;
 
+const formattedDataDirectory = 'formatted-data';
+
 const _getKey = s => murmur.murmur3(s);
 const _getPath = (dataDirectory, key) => path.join(dataDirectory, `${key}.html`);
 const getUrlPath = u => _getPath('data', _getKey(u));
@@ -199,6 +201,7 @@ const getMainUrls = $ => getAnchors($, `#content table > tbody > tr > td > ul > 
 const getPageUrls = $ => getAnchors($, 'div[data-source="related_aesthetics"] > .pi-data-value > a');
 const getPageName = u => u.match(nameRegex)?.[1] ?? '';
 module.exports = {
+  formattedDataDirectory,
   getUrlPath,
   traverse,
   parseMain,
