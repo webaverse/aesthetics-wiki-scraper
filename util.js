@@ -158,10 +158,11 @@ const parsePage = $ => {
     const $el = $(el);
     const key = $el.find('.pi-data-label').text().trim();
     const value = $el.find('.pi-data-value').text().trim();
-    return key && value && {
+    return key && value && `${key}: ${value}`;
+    /* return key && value && {
       key,
       value,
-    };
+    }; */
   }).filter(o => !!o);
   $('aside').remove();
   const contents = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
