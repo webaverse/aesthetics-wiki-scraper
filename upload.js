@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const weaviate = require('weaviate-client');
-const mkdirp = require('mkdirp');
+// const mkdirp = require('mkdirp');
 const uuidByString = require('uuid-by-string');
 const {formattedDataDirectory, traverse, parse, getUrls, getPageName} = require('./util.js');
 
@@ -37,8 +37,8 @@ const childrenCache = {
 
 const schemas = [
   {
-    "class": "Example",
-    "description": "A TV Tropes example",
+    "class": "Aesthetic",
+    "description": "An aesthetics wiki page",
     "properties": [
       {
         "dataType": [
@@ -46,40 +46,6 @@ const schemas = [
         ],
         "description": "Title of the page",
         "name": "title"
-      },
-      {
-        "dataType": [
-          "string"
-        ],
-        "description": "Content of the page",
-        "name": "content"
-      },
-      {
-        "dataType": [
-          "string"
-        ],
-        "description": "Type of example",
-        "name": "type"
-      },
-    ],
-  },
-  {
-    "class": "Trope",
-    "description": "A TV Tropes trope",
-    "properties": [
-      {
-        "dataType": [
-          "string"
-        ],
-        "description": "Title of the page",
-        "name": "title"
-      },
-      {
-        "dataType": [
-          "Example"
-        ],
-        "description": "Examples of the trope",
-        "name": "hasArticles"
       },
       {
         "dataType": [
@@ -92,37 +58,27 @@ const schemas = [
         "dataType": [
           "string[]"
         ],
-        "description": "Quotes from the page",
-        "name": "quotes"
+        "description": "Properties in the infobox",
+        "name": "properties"
+      },
+      {
+        "dataType": [
+          "string[]"
+        ],
+        "description": "Captions in the page",
+        "name": "captions"
       },
     ],
   },
 ];
 
-const tropes = (() => {
-  const s = fs.readFileSync(path.join(formattedDataDirectory, 'tropes.json'), 'utf8');
+const aesthetics = (() => {
+  const s = fs.readFileSync(path.join(formattedDataDirectory, 'aesthetics.json'), 'utf8');
   const j = JSON.parse(s);
   return Object.keys(j).map(k => {
     const v = j[k];
     return {
-      class: 'Trope',
-      id: uuidByString(k),
-      properties: v,
-    };
-  });
-})();
-const examples = (() => {
-  const s = fs.readFileSync(path.join(formattedDataDirectory, 'examples.json'), 'utf8');
-  const j = JSON.parse(s);
-  return Object.keys(j).map(k => {
-    const v = j[k];
-    {
-      const match = k.match(/^([^\/]+)/);
-      const type = match?.[1] ?? '';
-      v.type = type;
-    }
-    return {
-      class: 'Example',
+      class: 'Aesthetic',
       id: uuidByString(k),
       properties: v,
     };
@@ -149,7 +105,7 @@ const client = weaviate.client({
         .withClass(schema)
         .do();
     } catch(err) {
-      if (!/422/.test(err)) {
+      if (!/422/.test(err)) { // already exists
         throw err;
       }
     }
@@ -162,13 +118,9 @@ const client = weaviate.client({
     }
     await batcher.do();
   };
-  for (let i = 0; i < examples.length; i += batchSize) {
-    console.log(`uploading examples (${i}/${examples.length})...`);
-    await _uploadDatas(examples.slice(i, i + batchSize));
-  }
-  for (let i = 0; i < tropes.length; i += batchSize) {
-    console.log(`uploading tropes (${i}/${tropes.length})...`);
-    await _uploadDatas(tropes.slice(i, i + batchSize));
+  for (let i = 0; i < aesthetics.length; i += batchSize) {
+    console.log(`uploading aesthetics (${i}/${aesthetics.length})...`);
+    await _uploadDatas(aesthetics.slice(i, i + batchSize));
   }
 })().catch(err => {
   console.error(err)
