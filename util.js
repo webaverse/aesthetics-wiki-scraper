@@ -139,12 +139,12 @@ const parseMain = $ => {
   $('table').remove();
   $('iframe').remove();
 
-  const title = $('h1').first().text().trim();
-  const contents = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
+  const title = $('h1').first().text().trim().replace(/(\s)+/g, '$1');
+  const content = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
   
   return {
     title,
-    contents,
+    content,
   };
 };
 const parsePage = $ => {
