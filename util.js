@@ -165,13 +165,13 @@ const parsePage = $ => {
     }; */
   }).filter(o => !!o);
   $('aside').remove();
-  const contents = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
+  const content = $('.mw-parser-output').text().trim().replace(/(\s)+/g, '$1').replace(/\t/g, '\n');
   
   return {
     title,
     captions,
     properties,
-    contents,
+    content,
   };
 };
 const getAnchors = ($, selector) => {
