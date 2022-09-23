@@ -111,16 +111,30 @@ const client = weaviate.client({
     }
   }
 
+  const numRetries = 3;
   const _uploadDatas = async datas => {
     const batcher = client.batch.objectsBatcher();
     for (const data of datas) {
       batcher.withObject(data);
     }
-    await batcher.do();
+    const result = await batcher.do();
+    let ok = true;
+    for (const item of result) {
+      if (item.result.errors) {
+        console.warn(item.result.errors);
+        ok = false;
+      }
+    }
+    return ok;
   };
   for (let i = 0; i < aesthetics.length; i += batchSize) {
     console.log(`uploading aesthetics (${i}/${aesthetics.length})...`);
-    await _uploadDatas(aesthetics.slice(i, i + batchSize));
+    for (let j = 0; j < numRetries; j++) {
+      const ok = await _uploadDatas(aesthetics.slice(i, i + batchSize));
+      if (ok) {
+        break;
+      }
+    }
   }
 })().catch(err => {
   console.error(err)
